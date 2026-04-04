@@ -1,6 +1,7 @@
+# 此项目为demo版本。
 # 🌀 开罗尔控制器 | Chiral Controller
 
-手机作为 MCP Client 远程调用电脑端 MCP Server 的 Tool，实现 Kimi Code CLI 代码生成的跨设备流式控制。
+手机作为 MCP Client 远程调用电脑端 MCP Server 的 Tool，实现 Kimi Code CLI 代码生成的跨设备控制。取名灵感来自《死亡搁浅》的开罗尔物质。
 
 ## 架构
 
@@ -58,7 +59,7 @@ cd mobile && npm run dev
 2. 手机浏览器访问 `http://<电脑IP>:5173`
 3. 服务器地址填入 `http://<电脑IP>:3777`
 4. 点击「连接」，输入提示词，点击「发送」
-5. 观看 Kimi 实时生成的代码流式显示在手机上！
+5. 观看 Kimi 实时生成的代码显示在手机上！
 
 ## 项目结构
 
