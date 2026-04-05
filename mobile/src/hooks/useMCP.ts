@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { Session, Message, StreamEvent, ContextFile } from '../types';
+import type { Session, StreamEvent, ContextFile } from '../types';
 
 interface MCPState {
   connected: boolean;
