@@ -24,7 +24,31 @@
 
 ## 快速开始
 
-### 方式一：一键启动（推荐）
+### 方式一：使用 chiral-cli (推荐)
+
+安装 CLI 工具：
+
+```bash
+npm install -g chiral-cli
+```
+
+启动开发环境：
+
+```bash
+# 启动完整环境 (Server + Client)
+chiral run dev
+
+# 使用普通 kimi 版本
+chiral run dev --normal
+
+# 查看状态
+chiral status
+
+# 停止服务
+chiral stop
+```
+
+### 方式二：一键启动
 
 ```bash
 node start.js
@@ -35,13 +59,13 @@ node start.js
 start-dev.bat
 ```
 
-### 方式二：从 Kimi CLI Skill 启动
+### 方式三：从 Kimi CLI Skill 启动
 
 ```bash
 python .agents/skills/chiral-controller/scripts/start.py
 ```
 
-### 方式三：手动启动
+### 方式四：手动启动
 
 **终端 1 - MCP Server:**
 ```bash
@@ -61,10 +85,69 @@ cd mobile && npm run dev
 4. 点击「连接」，输入提示词，点击「发送」
 5. 观看 Kimi 实时生成的代码流式显示在手机上！
 
+## NPM 包
+
+本项目提供两个 NPM 包：
+
+### chiral-cli
+
+命令行工具，提供 `chiral` 命令管理 Chiral Controller。
+
+```bash
+npm install -g chiral-cli
+```
+
+**命令:**
+- `chiral run dev` - 启动开发环境
+- `chiral run server` - 启动 MCP Server
+- `chiral run client` - 启动 Web Client
+- `chiral stop` - 停止服务
+- `chiral status` - 查看状态
+- `chiral config` - 管理配置
+
+### chiral-mcp
+
+MCP Server 工具包，让其他 MCP Client 可以调用 Chiral Controller。
+
+```bash
+npm install -g chiral-mcp
+```
+
+**在 Claude Desktop 中配置:**
+
+```json
+{
+  "mcpServers": {
+    "chiral": {
+      "command": "npx",
+      "args": ["-y", "chiral-mcp"]
+    }
+  }
+}
+```
+
+**可用工具:**
+- `chiral_start_dev` - 启动开发环境
+- `chiral_start_server` - 启动 MCP Server
+- `chiral_start_client` - 启动 Web Client
+- `chiral_stop` - 停止服务
+- `chiral_status` - 获取状态
+- `chiral_get_config` - 获取配置
+- `chiral_set_config` - 设置配置
+
 ## 项目结构
 
 ```
 chiral-controller/
+├── packages/                 # NPM 包
+│   ├── chiral-cli/          # CLI 工具
+│   │   ├── src/
+│   │   ├── bin/
+│   │   └── package.json
+│   └── chiral-mcp/          # MCP Server 工具包
+│       ├── src/
+│       ├── bin/
+│       └── package.json
 ├── skill/                    # 电脑端 MCP Server
 │   ├── src/
 │   │   └── server.ts         # SSE + MCP Tool 实现
@@ -124,6 +207,33 @@ POST /message?sessionId=xxx
 
 ← SSE event: message
 ← data: { "jsonrpc": "2.0", "method": "notifications/progress", "params": { "stream_id": "uuid", "type": "done" } }
+```
+
+## 开发
+
+### 安装依赖
+
+```bash
+# 安装所有依赖
+npm run install:all
+```
+
+### 构建包
+
+```bash
+# 构建所有包
+npm run build
+
+# 单独构建
+npm run build:cli
+npm run build:mcp
+```
+
+### 发布包
+
+```bash
+# 发布到 NPM
+npm run publish:all
 ```
 
 ## License

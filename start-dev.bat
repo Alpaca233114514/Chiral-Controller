@@ -57,7 +57,7 @@ if not exist "node_modules" (
 cd /d "%PROJECT_ROOT%"
 
 echo Starting MCP Server on port 3777...
-start "Chiral Server" cmd /k "cd skill && npm run dev"
+start "Chiral Server" cmd /k "cd skill && set KIMI_CLI=%KIMI_CLI%&& npm run dev"
 
 timeout /t 2 /nobreak >nul
 

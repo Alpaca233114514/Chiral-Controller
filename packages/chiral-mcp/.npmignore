@@ -1,0 +1,8 @@
+src/
+tsconfig.json
+*.tsbuildinfo
+.gitignore
+node_modules/
+.vscode/
+.idea/
+*.log

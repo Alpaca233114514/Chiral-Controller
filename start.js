@@ -67,7 +67,16 @@ function installDeps(dir, name) {
 function startService(dir, name, port) {
   console.log(`Starting ${name}...`);
   
-  const proc = spawn('npm', ['run', 'dev'], {
+  // 确保 KIMI_CLI 环境变量传递到子进程
+  const kimiCli = process.env.KIMI_CLI || 'kimi';
+  const isWin = process.platform === 'win32';
+  
+  // 使用 shell 命令来设置环境变量并启动
+  const cmd = isWin 
+    ? `set KIMI_CLI=${kimiCli}&& npm run dev`
+    : `KIMI_CLI=${kimiCli} npm run dev`;
+  
+  const proc = spawn(cmd, {
     cwd: dir,
     stdio: 'pipe',
     shell: true,

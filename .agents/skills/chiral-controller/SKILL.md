@@ -2,87 +2,121 @@
 name: chiral-controller
 description: |
   开罗尔控制器 (Chiral Controller) - 手机远程控制 Kimi CLI 代码生成的开发工具。
-  提供 MCP Server + React Web 客户端，通过 SSE 协议实现跨设备流式控制。
   
   Use when:
+  - 用户询问关于"开罗尔"、"Chiral Controller"、"chiral"
   - 需要启动 Chiral Controller 开发环境
   - 需要同时运行 MCP Server (电脑端) 和 Web Client (手机端)
   - 需要远程控制 Kimi CLI 进行代码生成
+  - 需要发布 chiral-cli / chiral-mcp NPM 包
 ---
 
 # 开罗尔控制器 (Chiral Controller)
 
 手机作为 MCP Client 远程调用电脑端 MCP Server，实现 Kimi Code CLI 的跨设备流式控制。
 
-## 架构
-
-```
-┌─────────────────┐         SSE (MCP over SSE)         ┌─────────────────┐
-│   手机/浏览器    │  ◄────────────────────────────────►  │   电脑 MCP Server│
-│  (React Web)    │    JSON-RPC 2.0 + Notifications     │  (Node.js)      │
-│   localhost:5173│                                     │  localhost:3777 │
-└─────────────────┘                                     └─────────────────┘
-```
-
 ## 快速启动
 
-### 自动启动（推荐）
+### 方式 1：chiral CLI（推荐）
 
 ```bash
-# 同时启动 Server 和 Client
-python .agents/skills/chiral-controller/scripts/start-dev.py
+# 全局安装
+npm install -g chiral-cli
+
+# 使用命令
+chiral run dev              # 启动开发环境
+chiral run dev --normal     # 使用普通 kimi 版本
+chiral run server           # 只启动 MCP Server
+chiral run client           # 只启动 Web Client
+chiral stop                 # 停止服务
+chiral status               # 查看状态
+chiral help                 # 显示帮助
+
+# 快捷别名
+cc run dev
 ```
 
-### 手动启动
+### 方式 2：批处理脚本
 
-**终端 1 - MCP Server:**
 ```bash
-cd skill
-npm run dev
+# Windows
+.\start-dev-superpowers.bat
 ```
 
-**终端 2 - Web Client:**
+### 方式 3：从 Kimi CLI 启动
+
 ```bash
-cd mobile
-npm run dev
+python ~/.kimi/skills/chiral-controller/scripts/start.py
 ```
 
-## 使用流程
+## NPM 包发布
 
-1. 启动后，Server 运行在 `http://localhost:3777`
-2. Web Client 运行在 `http://localhost:5173`（同时暴露到局域网）
-3. 手机浏览器访问电脑的局域网 IP:5173
-4. 在手机上点击「连接」，输入提示词，发送给 Kimi
-5. 实时观看 Kimi 生成的代码流式显示在手机上！
+本项目使用 `npm-publish` skill 进行包发布：
+
+### 1. 配置 NPM 令牌（只需一次）
+
+```bash
+python ~/.kimi/skills/npm-publish/scripts/config.py setup
+```
+
+### 2. 添加 Chiral 项目配置（只需一次）
+
+```bash
+python ~/.kimi/skills/npm-publish/scripts/config.py project add chiral \
+  ~/Documents/GitHub/Chiral-Controller/packages \
+  --packages chiral-cli,chiral-mcp
+```
+
+### 3. 发布
+
+```bash
+python ~/.kimi/skills/npm-publish/scripts/publish.py chiral
+```
 
 ## 项目结构
 
 ```
 chiral-controller/
-├── skill/              # MCP Server (Node.js + Express + SSE)
-│   ├── src/server.ts   # SSE 端点 + kimi/generate Tool
-│   └── package.json
-├── mobile/             # React Web 客户端
-│   ├── src/
-│   │   ├── hooks/useMCP.ts   # MCP Client hook
-│   │   └── App.tsx
-│   └── package.json
-└── .agents/skills/chiral-controller/   # 本 Skill
-    ├── SKILL.md
-    └── scripts/start-dev.py
+├── packages/
+│   ├── chiral-cli/         # CLI 工具
+│   └── chiral-mcp/         # MCP Server 工具包
+├── skill/                  # MCP Server
+├── mobile/                 # Web Client
+└── .agents/skills/
+    └── chiral-controller/
+        ├── SKILL.md
+        └── scripts/
+            ├── start.py
+            └── start-dev.py
 ```
 
-## 协议
+## MCP 工具集成
 
-- **传输**: MCP over SSE (Server-Sent Events)
-- **格式**: JSON-RPC 2.0
-- **Tool**: `kimi/generate` - 接收 prompt，返回 stream_id
-- **Notification**: `notifications/progress` - 实时推送 token/thinking/done
+### Claude Desktop 配置
 
-## 故障排查
+```json
+{
+  "mcpServers": {
+    "chiral": {
+      "command": "npx",
+      "args": ["-y", "chiral-mcp"]
+    }
+  }
+}
+```
 
-**问题**: 手机无法连接电脑  
-**解决**: 确保手机和电脑在同一 WiFi，检查防火墙是否放行 3777 和 5173 端口
+### 可用 MCP 工具
 
-**问题**: kimicode-cli 未找到  
-**解决**: 确保 `kimi` 命令在 PATH 中可用
+| 工具名 | 描述 |
+|--------|------|
+| `chiral_start_dev` | 启动开发环境 |
+| `chiral_start_server` | 启动 MCP Server |
+| `chiral_start_client` | 启动 Web Client |
+| `chiral_stop` | 停止服务 |
+| `chiral_status` | 获取状态 |
+
+## 相关 Skills
+
+- **npm-publish** - 用于发布 NPM 包
+  - 位置: `~/.kimi/skills/npm-publish/`
+  - 用途: 构建和发布 chiral-cli / chiral-mcp

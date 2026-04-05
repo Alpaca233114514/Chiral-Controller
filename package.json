@@ -1,0 +1,37 @@
+{
+  "name": "chiral-controller",
+  "version": "1.0.0",
+  "private": true,
+  "description": "开罗尔控制器 - 手机远程控制 Kimi CLI 代码生成",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build:cli": "cd packages/chiral-cli && npm run build",
+    "build:mcp": "cd packages/chiral-mcp && npm run build",
+    "build": "npm run build:cli && npm run build:mcp",
+    "dev": "cd packages/chiral-cli && npm run dev",
+    "install:all": "npm install && cd skill && npm install && cd ../mobile && npm install",
+    "publish:cli": "cd packages/chiral-cli && npm publish",
+    "publish:mcp": "cd packages/chiral-mcp && npm publish",
+    "publish:all": "npm run publish:cli && npm run publish:mcp"
+  },
+  "keywords": [
+    "chiral",
+    "controller",
+    "mcp",
+    "kimi",
+    "cli",
+    "remote",
+    "mobile"
+  ],
+  "author": "li",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/Chiral-Controller.git"
+  }
+}

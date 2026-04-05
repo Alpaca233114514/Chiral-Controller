@@ -70,12 +70,32 @@ app.post('/message', async (req, res) => {
       return;
     }
 
-    // 启动 kimi 进程
-    safeLog(`[Kimi] Starting generation: ${streamId}`);
-    
     // 检查平台
     const isWindows = process.platform === 'win32';
-    const kimiCmd = isWindows ? 'kimi.exe' : 'kimi';
+    
+    // 支持通过环境变量 KIMI_CLI 指定 kimi 命令路径
+    // 可选值: 'kimi' (默认), 'kimi-superpowers', 或完整路径
+    let kimiCmd: string;
+    const kimiCli = process.env.KIMI_CLI || 'kimi-superpowers'; // 默认使用 superpowers
+    
+    safeLog(`[Debug] KIMI_CLI env: ${process.env.KIMI_CLI}`);
+    safeLog(`[Debug] Using: ${kimiCli}`);
+    
+    if (kimiCli === 'kimi-superpowers') {
+      // 使用 superpowers 版本的 kimi
+      const homeDir = isWindows ? process.env.USERPROFILE : process.env.HOME;
+      kimiCmd = `${homeDir}\\.venv-kimi-superpowers\\Scripts\\kimi.exe`;
+    } else if (kimiCli.includes('/') || kimiCli.includes('\\')) {
+      // 用户提供了完整路径
+      kimiCmd = kimiCli;
+    } else {
+      // 默认使用 kimi
+      kimiCmd = isWindows ? 'kimi.exe' : 'kimi';
+    }
+    
+    // 启动 kimi 进程
+    safeLog(`[Kimi] Using CLI: ${kimiCmd}`);
+    safeLog(`[Kimi] Starting generation: ${streamId}`);
     
     // 使用 detached 模式并完全忽略 stdio，避免 rich 检测到 Windows 控制台
     // 设置 TERM=dumb 让 rich 进入非终端模式
