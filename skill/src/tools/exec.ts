@@ -74,13 +74,23 @@ export async function handleExec(
     command: `${kimiCmd} ${kimiArgs.join(' ')}`
   });
 
-  const kimi = spawn(kimiCmd, isRawCommand ? [command.trim()] : ['-p', command], {
+  const kimi = spawn(kimiCmd, kimiArgs, {
     shell: false,
     env,
     cwd: params.cwd || process.cwd(),
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
     detached: true
+  });
+
+  kimi.on('error', (err) => {
+    console.error('[MCP] Failed to spawn kimi:', err);
+    if (sseRes) {
+      sendNotification(sseRes, {
+        type: 'error',
+        content: `Failed to start kimi process: ${err.message}`
+      });
+    }
   });
 
   let buffer = '';
