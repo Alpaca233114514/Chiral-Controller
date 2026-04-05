@@ -1,7 +1,6 @@
 @echo off
 chcp 65001 >nul
 
-REM Chiral Controller CLI for CMD
 set "CHIRAL_ROOT=C:\Users\li\Documents\GitHub\Chiral-Controller"
 set "KIMI_CLI=kimi-superpowers"
 
@@ -12,19 +11,20 @@ if /I "%1"=="-Normal" (
 if /I "%1"=="run" (
     if /I "%2"=="dev" (
         echo Starting Chiral Controller (%KIMI_CLI%)...
-        start "Chiral Server" cmd /k "cd /d %CHIRAL_ROOT%\skill ^&^& set KIMI_CLI=%KIMI_CLI% ^&^& node_modules\.bin\tsx src\server.ts"
+        cd /d %CHIRAL_ROOT%\skill
+        start "Chiral Server" cmd /k "set KIMI_CLI=%KIMI_CLI% && npx tsx src/server.ts"
         timeout /t 2 /nobreak >nul
-        start "Chiral Client" cmd /k "cd /d %CHIRAL_ROOT%\mobile ^&^& npm run dev"
+        cd /d %CHIRAL_ROOT%\mobile
+        start "Chiral Client" cmd /k "npm run dev"
         echo.
         echo Services started!
         echo Local:  http://localhost:5173
-        echo Mobile: http://192.168.31.17:5173
         goto :end
     )
     if /I "%2"=="server" (
         cd /d %CHIRAL_ROOT%\skill
         set KIMI_CLI=%KIMI_CLI%
-        node_modules\.bin\tsx src\server.ts
+        npx tsx src/server.ts
         goto :end
     )
     if /I "%2"=="client" (

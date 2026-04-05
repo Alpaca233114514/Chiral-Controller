@@ -33,5 +33,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/yourusername/Chiral-Controller.git"
+  },
+  "dependencies": {
+    "chiral-mcp": "^1.0.0"
   }
 }
