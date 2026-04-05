@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { handleExec } from './exec.js';
-import { handleFileUpload } from './file.js';
+import { handleFileUpload, handleFileDelete } from './file.js';
 import { handleSessionManage } from './session.js';
 import { handleChat } from './chat.js';
 
@@ -18,6 +18,7 @@ const tools: Record<string, ToolHandler> = {
   'kimi/generate': handleExec,  // 保持兼容
   'kimi/exec': handleExec,
   'kimi/file/upload': handleFileUpload,
+  'kimi/file/delete': handleFileDelete,
   'kimi/session/manage': handleSessionManage,
   'kimi/chat': handleChat,
 };
@@ -36,4 +37,4 @@ export async function routeTool(
   return true;
 }
 
-export { handleExec, handleFileUpload, handleSessionManage, handleChat };
+export { handleExec, handleFileUpload, handleFileDelete, handleSessionManage, handleChat };
