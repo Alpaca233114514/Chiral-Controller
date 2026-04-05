@@ -85,6 +85,31 @@ cd mobile && npm run dev
 4. 点击「连接」，输入提示词，点击「发送」
 5. 观看 Kimi 实时生成的代码流式显示在手机上！
 
+## 常见问题
+
+### PowerShell 执行策略错误
+
+如果在 PowerShell 中运行 `chiral` 命令时遇到以下错误：
+
+```
+File C:\Users\...\chiral.ps1 cannot be loaded because running scripts is disabled on this system.
+```
+
+**解决方案：**
+
+1. **以管理员身份打开 PowerShell，执行：**
+   ```powershell
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+   ```
+   然后输入 `Y` 确认。
+
+2. **或者改用 CMD 运行：**
+   ```cmd
+   node start.js
+   ```
+
+3. **或者使用 Windows Terminal**（默认允许脚本执行）
+
 ## NPM 包
 
 本项目提供两个 NPM 包：
