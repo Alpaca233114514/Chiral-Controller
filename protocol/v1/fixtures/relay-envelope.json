@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "messageId": "msg_fixture_001",
+  "sourceDeviceId": "desktop_fixture",
+  "targetDeviceId": "mobile_fixture",
+  "sequence": 42,
+  "kind": "event",
+  "nonce": "AAAAAQAAAAAAAAAq",
+  "ciphertext": "Y2lwaGVydGV4dC1maXh0dXJl"
+}

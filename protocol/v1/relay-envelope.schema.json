@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chiral.liyuanstudio.com/schema/v1/relay-envelope.json",
+  "title": "Chiral RelayEnvelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "messageId",
+    "sourceDeviceId",
+    "targetDeviceId",
+    "sequence",
+    "kind",
+    "nonce",
+    "ciphertext"
+  ],
+  "properties": {
+    "version": { "const": "1.0" },
+    "messageId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "sourceDeviceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "targetDeviceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "kind": {
+      "enum": ["request", "response", "event", "ack", "error"]
+    },
+    "nonce": {
+      "type": "string",
+      "description": "Base64 encoded 96-bit ChaCha20-Poly1305 nonce"
+    },
+    "ciphertext": {
+      "type": "string",
+      "description": "Base64 encoded ciphertext including AEAD tag"
+    }
+  }
+}

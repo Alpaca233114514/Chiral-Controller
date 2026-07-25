@@ -1,0 +1,22 @@
+{
+  "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+  "plaintext": {
+    "operation": "session.status",
+    "requestId": "request_fixture",
+    "sessionId": "session_fixture",
+    "timestamp": "2026-07-26T00:00:00.000Z",
+    "payload": {
+      "state": "idle"
+    }
+  },
+  "envelope": {
+    "version": "1.0",
+    "messageId": "mobile_fixture-7",
+    "sourceDeviceId": "mobile_fixture",
+    "targetDeviceId": "desktop_fixture",
+    "sequence": 7,
+    "kind": "request",
+    "nonce": "AAECAwQFBgcICQoL",
+    "ciphertext": "8tlncExlxDTe7FHRoj99BroD24g/Wt7Nh+NatlfshE6J8VmWlWr4/BUIVKoA5fpGDfD2EpRQzO5g3fsrsjz7pQoR06OscA7T5mUoz2sVs5+FuC5KGx+CWyx70nqxEGfMOb8Bg9XjBcaBacWakqaast87ZgizbXDCf10a70kP5WSNRLPc0F+wDS0xRQEOTx9bwBSlSCkGqDJXw9pMewaPT6w3rmrcMjNjoWjJJw=="
+  }
+}

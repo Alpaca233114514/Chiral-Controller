@@ -4,26 +4,31 @@
   "private": true,
   "description": "开罗尔控制器 - 手机远程控制 Kimi CLI 代码生成",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "services/*"
   ],
   "scripts": {
-    "build:cli": "cd packages/chiral-cli && npm run build",
-    "build:mcp": "cd packages/chiral-mcp && npm run build",
-    "build": "npm run build:cli && npm run build:mcp",
-    "dev": "cd packages/chiral-cli && npm run dev",
-    "install:all": "npm install && cd skill && npm install && cd ../mobile && npm install",
-    "publish:cli": "cd packages/chiral-cli && npm publish",
-    "publish:mcp": "cd packages/chiral-mcp && npm publish",
-    "publish:all": "npm run publish:cli && npm run publish:mcp"
+    "build": "npm run build:protocol && npm run build:relay",
+    "build:protocol": "npm --workspace @chiral/protocol run build",
+    "build:relay": "npm --workspace @chiral/relay run build",
+    "dev": "npm --workspace @chiral/relay run dev",
+    "test": "npm run test:protocol && npm run test:relay",
+    "test:protocol": "npm --workspace @chiral/protocol test",
+    "test:relay": "npm --workspace @chiral/relay test",
+    "legacy:build:cli": "cd packages/chiral-cli && npm run build",
+    "legacy:build:mcp": "cd packages/chiral-mcp && npm run build",
+    "legacy:dev": "cd packages/chiral-cli && npm run dev",
+    "legacy:install": "npm install && cd skill && npm install && cd ../mobile && npm install"
   },
   "keywords": [
     "chiral",
     "controller",
-    "mcp",
     "kimi",
     "cli",
     "remote",
-    "mobile"
+    "mobile",
+    "flutter",
+    "relay"
   ],
   "author": "li",
   "license": "MIT",
@@ -33,8 +38,5 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/yourusername/Chiral-Controller.git"
-  },
-  "dependencies": {
-    "chiral-mcp": "^1.0.0"
   }
 }
