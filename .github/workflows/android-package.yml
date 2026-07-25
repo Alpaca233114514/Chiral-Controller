@@ -1,0 +1,188 @@
+name: Android package
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Package target
+        required: true
+        default: debug-apk
+        type: choice
+        options:
+          - debug-apk
+          - release-apk
+          - release-aab
+          - release-all
+      build_name:
+        description: Optional Android versionName override (for example, 1.2.0)
+        required: false
+        type: string
+  push:
+    branches:
+      - "codex/**"
+    tags:
+      - "android-v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-package-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.41.9"
+  APP_DIRECTORY: apps/chiral_mobile
+
+jobs:
+  package:
+    name: Build ${{ github.ref_type == 'tag' && 'release-all' || github.event_name == 'workflow_dispatch' && inputs.target || 'debug-apk' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      PACKAGE_TARGET: ${{ github.ref_type == 'tag' && 'release-all' || github.event_name == 'workflow_dispatch' && inputs.target || 'debug-apk' }}
+      BUILD_NAME_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.build_name || '' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: |
+            apps/chiral_mobile/android/*.gradle*
+            apps/chiral_mobile/android/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        working-directory: ${{ env.APP_DIRECTORY }}
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: ${{ env.APP_DIRECTORY }}
+        run: flutter analyze
+
+      - name: Test
+        working-directory: ${{ env.APP_DIRECTORY }}
+        run: flutter test
+
+      - name: Prepare release signing
+        if: env.PACKAGE_TARGET != 'debug-apk'
+        working-directory: ${{ env.APP_DIRECTORY }}
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          missing=()
+          [[ -n "$ANDROID_KEYSTORE_BASE64" ]] || missing+=(ANDROID_KEYSTORE_BASE64)
+          [[ -n "$ANDROID_KEYSTORE_PASSWORD" ]] || missing+=(ANDROID_KEYSTORE_PASSWORD)
+          [[ -n "$ANDROID_KEY_ALIAS" ]] || missing+=(ANDROID_KEY_ALIAS)
+          [[ -n "$ANDROID_KEY_PASSWORD" ]] || missing+=(ANDROID_KEY_PASSWORD)
+
+          if (( ${#missing[@]} > 0 )); then
+            printf 'Missing required GitHub Actions secrets: %s\n' "${missing[*]}" >&2
+            exit 1
+          fi
+
+          keystore_path="$RUNNER_TEMP/chiral-upload-keystore.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+          {
+            printf 'storePassword=%s\n' "$ANDROID_KEYSTORE_PASSWORD"
+            printf 'keyPassword=%s\n' "$ANDROID_KEY_PASSWORD"
+            printf 'keyAlias=%s\n' "$ANDROID_KEY_ALIAS"
+            printf 'storeFile=%s\n' "$keystore_path"
+          } > android/key.properties
+
+      - name: Build Android package
+        working-directory: ${{ env.APP_DIRECTORY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          build_args=(--build-number "$GITHUB_RUN_NUMBER")
+          if [[ -n "$BUILD_NAME_INPUT" ]]; then
+            build_args+=(--build-name "$BUILD_NAME_INPUT")
+          elif [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            tag_version="${GITHUB_REF_NAME#android-v}"
+            if [[ "$tag_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
+              build_args+=(--build-name "$tag_version")
+            fi
+          fi
+
+          case "$PACKAGE_TARGET" in
+            debug-apk)
+              flutter build apk --debug "${build_args[@]}"
+              ;;
+            release-apk)
+              flutter build apk --release --split-per-abi "${build_args[@]}"
+              ;;
+            release-aab)
+              flutter build appbundle --release "${build_args[@]}"
+              ;;
+            release-all)
+              flutter build apk --release --split-per-abi "${build_args[@]}"
+              flutter build appbundle --release "${build_args[@]}"
+              ;;
+            *)
+              printf 'Unsupported package target: %s\n' "$PACKAGE_TARGET" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Collect packages and checksums
+        id: packages
+        working-directory: ${{ env.APP_DIRECTORY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          artifact_dir="$RUNNER_TEMP/chiral-android-$GITHUB_RUN_NUMBER"
+          mkdir -p "$artifact_dir"
+
+          while IFS= read -r -d '' package; do
+            cp "$package" "$artifact_dir/"
+          done < <(find build/app/outputs -type f \( -name '*.apk' -o -name '*.aab' \) -print0)
+
+          if ! compgen -G "$artifact_dir/*" > /dev/null; then
+            printf 'No Android packages were produced.\n' >&2
+            exit 1
+          fi
+
+          (
+            cd "$artifact_dir"
+            find . -maxdepth 1 -type f \( -name '*.apk' -o -name '*.aab' \) \
+              -exec sha256sum {} + > SHA256SUMS
+          )
+
+          {
+            printf 'Commit: %s\n' "$GITHUB_SHA"
+            printf 'Target: %s\n' "$PACKAGE_TARGET"
+            printf 'Flutter: %s\n' "$FLUTTER_VERSION"
+            printf 'Run: %s\n' "$GITHUB_RUN_ID"
+          } > "$artifact_dir/BUILD-INFO.txt"
+
+          printf 'path=%s\n' "$artifact_dir" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Android packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: chiral-android-${{ env.PACKAGE_TARGET }}-${{ github.run_number }}
+          path: ${{ steps.packages.outputs.path }}
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
