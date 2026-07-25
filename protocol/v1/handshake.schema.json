@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chiral.liyuanstudio.com/schema/v1/handshake.json",
+  "title": "Chiral HandshakePayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocolVersion", "capabilities", "limits", "resumeSequence"],
+  "properties": {
+    "protocolVersion": { "const": "1.0" },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxEnvelopeBytes", "maxAttachmentBytes"],
+      "properties": {
+        "maxEnvelopeBytes": { "type": "integer", "minimum": 1024 },
+        "maxAttachmentBytes": { "type": "integer", "minimum": 1024 }
+      }
+    },
+    "resumeSequence": { "type": "integer", "minimum": 0 }
+  }
+}

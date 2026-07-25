@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chiral.liyuanstudio.com/schema/v1/secure-message.json",
+  "title": "Chiral SecureMessage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["operation", "timestamp", "payload"],
+  "properties": {
+    "operation": {
+      "type": "string",
+      "pattern": "^(device|session|history|prompt|approval|question|file|workspace|task)\\.[a-z][a-z0-9_.-]*$"
+    },
+    "requestId": { "type": ["string", "null"] },
+    "sessionId": { "type": ["string", "null"] },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "payload": {}
+  }
+}
