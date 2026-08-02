@@ -1,17 +1,23 @@
-# chiral_mobile
+# Chiral Mobile
 
-A new Flutter project.
+Flutter remote controller for Kimi Code Desktop. Pair by scanning the QR code
+shown in Desktop under **Settings → Remote Control**.
 
-## Getting Started
+## Connection modes
 
-This project is a starting point for a Flutter application.
+- **LAN**: the app discovers `_chiral._tcp.local` and connects directly to
+  `ws://<desktop-ip>:3778/v1/local` with end-to-end encryption.
+- **Cloud**: when the LAN bridge is unavailable, pending requests are retried
+  through the encrypted relay with the same request ID.
 
-A few resources to get you started if this is your first Flutter project:
+The phone and desktop should be on the same Wi-Fi for LAN mode. Android builds
+need local-network multicast access; iOS prompts for local-network permission.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Development
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --debug
+```

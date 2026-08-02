@@ -51,6 +51,7 @@ export type PairingBundle = {
   relayUrl: string;
   pairingId: string;
   pairingToken: string;
+  expiresAt: string;
   desktop: DeviceDescriptor;
   lanEndpoints: string[];
 };
@@ -73,7 +74,7 @@ export function isRelayEnvelope(value: unknown): value is RelayEnvelope {
     Number.isSafeInteger(candidate.sequence) &&
     Number(candidate.sequence) >= 0 &&
     RELAY_KINDS.includes(candidate.kind as RelayKind) &&
-    isBase64(candidate.nonce, 12) &&
+    isNonceForSequence(candidate.nonce, Number(candidate.sequence)) &&
     isBase64(candidate.ciphertext)
   );
 }
@@ -111,4 +112,12 @@ function isBase64(value: unknown, byteLength?: number): value is string {
   } catch {
     return false;
   }
+}
+
+function isNonceForSequence(value: unknown, sequence: number): value is string {
+  if (!isBase64(value, 12)) return false;
+  const nonce = Buffer.from(value, "base64");
+  const expected = Buffer.alloc(8);
+  expected.writeBigUInt64BE(BigInt(sequence));
+  return nonce.subarray(4).equals(expected);
 }

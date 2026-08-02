@@ -22,9 +22,7 @@ class SecureEnvelopeCodec {
     required int sequence,
     required List<int> nonce,
   }) async {
-    if (nonce.length != 12) {
-      throw const FormatException('Chiral nonce must contain 12 bytes');
-    }
+    _validateNonceSequence(nonce, sequence);
     RelayEnvelope envelope = RelayEnvelope(
       messageId: '$localDeviceId-$sequence',
       sourceDeviceId: localDeviceId,
@@ -65,9 +63,7 @@ class SecureEnvelopeCodec {
       throw const FormatException('Encrypted payload is too short');
     }
     final List<int> nonce = base64Decode(envelope.nonce);
-    if (nonce.length != 12) {
-      throw const FormatException('Chiral nonce must contain 12 bytes');
-    }
+    _validateNonceSequence(nonce, envelope.sequence);
     final List<int> plaintext = await _cipher.decrypt(
       SecretBox(
         combined.sublist(0, combined.length - 16),
@@ -87,10 +83,29 @@ class InboundSequenceGuard {
   final Map<String, int> _lastSequence = <String, int>{};
 
   void accept(RelayEnvelope envelope) {
-    final int previous = _lastSequence[envelope.sourceDeviceId] ?? -1;
+    final List<int> nonce = base64Decode(envelope.nonce);
+    _validateNonceSequence(nonce, envelope.sequence);
+    final String epoch = base64Encode(nonce.sublist(0, 4));
+    final String key = '${envelope.sourceDeviceId}:$epoch';
+    final int previous = _lastSequence[key] ?? -1;
     if (envelope.sequence <= previous) {
       throw StateError('Replayed or out-of-order remote envelope rejected');
     }
-    _lastSequence[envelope.sourceDeviceId] = envelope.sequence;
+    _lastSequence[key] = envelope.sequence;
+  }
+}
+
+void _validateNonceSequence(List<int> nonce, int sequence) {
+  if (nonce.length != 12) {
+    throw const FormatException('Chiral nonce must contain 12 bytes');
+  }
+  if (sequence < 0) {
+    throw const FormatException('Chiral sequence must be non-negative');
+  }
+  for (int index = 0; index < 8; index += 1) {
+    final int shift = (7 - index) * 8;
+    if (nonce[index + 4] != ((sequence >> shift) & 0xff)) {
+      throw const FormatException('Chiral nonce does not match its sequence');
+    }
   }
 }

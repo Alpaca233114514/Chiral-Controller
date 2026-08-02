@@ -36,7 +36,9 @@ class LanDiscovery {
             )
             .first
             .timeout(const Duration(milliseconds: 700));
-        return 'ws://${address.address.address}:${service.port}';
+        return normalizeLanEndpoint(
+          'ws://${address.address.address}:${service.port}',
+        );
       }
     } on TimeoutException {
       return null;
@@ -63,4 +65,17 @@ class LanDiscovery {
       return domainName.contains(deviceId);
     }
   }
+}
+
+String normalizeLanEndpoint(String endpoint) {
+  final Uri uri = Uri.parse(endpoint.trim());
+  if ((uri.scheme != 'ws' && uri.scheme != 'wss') ||
+      uri.host.isEmpty ||
+      uri.hasFragment) {
+    throw FormatException('Invalid Chiral LAN endpoint: $endpoint');
+  }
+  final String path = uri.path.isEmpty || uri.path == '/'
+      ? '/v1/local'
+      : uri.path;
+  return uri.replace(path: path).toString();
 }

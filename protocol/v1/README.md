@@ -6,11 +6,13 @@ never receives a content-encryption key.
 
 ## Layers
 
-1. `RelayEnvelope` is visible to the relay and contains routing, ordering, and
+1. `PairingBundle` is the relay-issued, time-limited QR payload. It contains
+   the Desktop descriptor, Cloud relay URL, expiry, and optional LAN endpoints.
+2. `RelayEnvelope` is visible to the relay and contains routing, ordering, and
    encrypted bytes only.
-2. `SecureMessage` is JSON encoded, encrypted with ChaCha20-Poly1305, and stored
+3. `SecureMessage` is JSON encoded, encrypted with ChaCha20-Poly1305, and stored
    in `RelayEnvelope.ciphertext`.
-3. Device identity uses Ed25519. A paired connection derives its content key
+4. Device identity uses Ed25519. A paired connection derives its content key
    from X25519 plus HKDF-SHA256.
 
 The 96-bit AEAD nonce is formed from a 32-bit connection epoch followed by a

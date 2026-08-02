@@ -63,10 +63,19 @@ class RemoteTransport {
     final String? discovered = await _lanDiscovery.findDesktop(
       paired.bundle.desktop.deviceId,
     );
-    final List<String> lanEndpoints = <String>{
+    final List<String> lanEndpoints = <String>[];
+    final Set<String> seenEndpoints = <String>{};
+    for (final String candidate in <String>[
       ?discovered,
       ...paired.bundle.lanEndpoints,
-    }.toList(growable: false);
+    ]) {
+      try {
+        final String normalized = normalizeLanEndpoint(candidate);
+        if (seenEndpoints.add(normalized)) lanEndpoints.add(normalized);
+      } on FormatException {
+        // Ignore malformed advertised endpoints and continue to cloud fallback.
+      }
+    }
     for (final String endpoint in lanEndpoints) {
       try {
         await _connectEndpoint(endpoint, cloud: false);
@@ -213,8 +222,10 @@ class RemoteTransport {
   }
 
   Future<void> _handleEnvelope(RelayEnvelope envelope) async {
-    _inboundSequence.accept(envelope);
     final SecureMessage message = await _requireCodec().decrypt(envelope);
+    // Advance replay state only after authentication. Otherwise a forged
+    // high-sequence ciphertext could poison the peer's sequence window.
+    _inboundSequence.accept(envelope);
     if ((envelope.kind == RelayKind.response ||
             envelope.kind == RelayKind.error) &&
         message.requestId != null) {

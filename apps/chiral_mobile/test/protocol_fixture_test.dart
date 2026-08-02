@@ -22,6 +22,15 @@ void main() {
     expect(message.toJson(), json);
   });
 
+  test('Dart decodes the shared PairingBundle fixture', () async {
+    final Map<String, dynamic> json = await _fixture('pairing-bundle.json');
+    final PairingBundle bundle = PairingBundle.fromJson(json);
+    expect(bundle.pairingId, 'pairing_fixture');
+    expect(bundle.expiresAt, '2030-01-02T03:04:05.000Z');
+    expect(bundle.lanEndpoints, <String>['ws://192.0.2.10:3778/v1/local']);
+    expect(bundle.toJson(), json);
+  });
+
   test('rejects an unsupported relay envelope version', () {
     expect(
       () => RelayEnvelope.fromJson(<String, dynamic>{'version': '2.0'}),

@@ -70,9 +70,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
     final PlatformFile? file = result?.files.single;
     if (file?.bytes == null || !mounted) return;
-    await ref
-        .read(remoteControllerProvider.notifier)
-        .uploadFile(filename: file!.name, bytes: file.bytes!);
+    final RemoteController controller = ref.read(
+      remoteControllerProvider.notifier,
+    );
+    String? uploadedPath;
+    try {
+      uploadedPath = await controller.uploadFile(
+        filename: file!.name,
+        bytes: file.bytes!,
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('附件上传失败：$error')));
+      }
+      return;
+    }
+    if (uploadedPath == null || !mounted) return;
+    final String normalized = uploadedPath.replaceAll('\\', '/');
+    final String token = normalized.contains(RegExp(r'\s'))
+        ? '@"$normalized"'
+        : '@$normalized';
+    final String next = <String>[
+      _composer.text.trimRight(),
+      token,
+    ].where((String part) => part.isNotEmpty).join('\n');
+    _composer.value = TextEditingValue(
+      text: next,
+      selection: TextSelection.collapsed(offset: next.length),
+    );
+    controller.setDraft(next);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('${file.name} 已加入下一条消息')));
   }
 
   void showWorkspace() {

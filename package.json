@@ -2,7 +2,7 @@
   "name": "chiral-controller",
   "version": "1.0.0",
   "private": true,
-  "description": "开罗尔控制器 - 手机远程控制 Kimi CLI 代码生成",
+  "description": "开罗尔控制器 - Flutter 手机安全远程控制 Kimi Code Desktop",
   "workspaces": [
     "packages/*",
     "services/*"
@@ -14,11 +14,7 @@
     "dev": "npm --workspace @chiral/relay run dev",
     "test": "npm run test:protocol && npm run test:relay",
     "test:protocol": "npm --workspace @chiral/protocol test",
-    "test:relay": "npm --workspace @chiral/relay test",
-    "legacy:build:cli": "cd packages/chiral-cli && npm run build",
-    "legacy:build:mcp": "cd packages/chiral-mcp && npm run build",
-    "legacy:dev": "cd packages/chiral-cli && npm run dev",
-    "legacy:install": "npm install && cd skill && npm install && cd ../mobile && npm install"
+    "test:relay": "npm --workspace @chiral/relay test"
   },
   "keywords": [
     "chiral",

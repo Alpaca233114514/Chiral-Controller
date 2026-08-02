@@ -360,13 +360,13 @@ class RemoteController extends Notifier<RemoteState> {
     );
   }
 
-  Future<void> uploadFile({
+  Future<String?> uploadFile({
     required String filename,
     required Uint8List bytes,
     String mimeType = 'application/octet-stream',
   }) async {
     final String? sessionId = state.selectedSessionId;
-    if (sessionId == null || !state.connected) return;
+    if (sessionId == null || !state.connected) return null;
     final List<AttachmentChunk> chunks = splitAttachment(bytes);
     final String uploadId = _uuid.v4();
     await _transport.request(
@@ -391,11 +391,14 @@ class RemoteController extends Notifier<RemoteState> {
         },
       );
     }
-    await _transport.request(
+    final dynamic response = await _transport.request(
       'file.upload.complete',
       sessionId: sessionId,
       payload: <String, dynamic>{'uploadId': uploadId},
     );
+    if (response is! Map) return null;
+    final dynamic path = response['path'];
+    return path is String && path.isNotEmpty ? path : null;
   }
 
   Future<dynamic> workspaceList([String? path]) {

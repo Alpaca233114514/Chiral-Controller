@@ -34,9 +34,36 @@ void main() {
       expect(controller.sentPrompt, 'continue');
     },
   );
+
+  testWidgets('renders LAN status and a connection error', (
+    WidgetTester tester,
+  ) async {
+    final _TestRemoteController controller = _TestRemoteController(
+      connectionMode: ConnectionMode.lan,
+      error: '本地网络权限被拒绝',
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [remoteControllerProvider.overrideWith(() => controller)],
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('LAN · 端到端加密'), findsOneWidget);
+    expect(find.text('本地网络权限被拒绝'), findsOneWidget);
+    expect(find.text('CLOUD · 端到端加密'), findsNothing);
+  });
 }
 
 class _TestRemoteController extends RemoteController {
+  _TestRemoteController({
+    this.connectionMode = ConnectionMode.cloud,
+    this.error,
+  });
+
+  final ConnectionMode connectionMode;
+  final String? error;
   String? sentPrompt;
   String? approvalDecision;
 
@@ -66,7 +93,7 @@ class _TestRemoteController extends RemoteController {
         ),
         sharedKey: List<int>.filled(32, 0),
       ),
-      connectionMode: ConnectionMode.cloud,
+      connectionMode: connectionMode,
       sessions: <ChiralSession>[
         ChiralSession(
           sessionId: 'session-1',
@@ -90,6 +117,7 @@ class _TestRemoteController extends RemoteController {
           data: const <String, dynamic>{'requestId': 'approval-1'},
         ),
       ],
+      error: error,
     );
   }
 

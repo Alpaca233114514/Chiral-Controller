@@ -1,0 +1,14 @@
+{
+  "protocolVersion": "1.0",
+  "relayUrl": "wss://chiral.liyuanstudio.com/v1/relay",
+  "pairingId": "pairing_fixture",
+  "pairingToken": "pairing-token-fixture",
+  "expiresAt": "2030-01-02T03:04:05.000Z",
+  "desktop": {
+    "deviceId": "desktop_fixture",
+    "displayName": "Fixture Desktop",
+    "identityPublicKey": "MCowBQYDK2VwAyEA7XcGBjJF1LrdqPpjVSEryYH5VY8VYkwI5OXKTxF8hGM=",
+    "agreementPublicKey": "MCowBQYDK2VuAyEAQplNvE4Y6R8F0x1Qq2ioQnh8IMK4l7Q3uw3AXkQxJ2E="
+  },
+  "lanEndpoints": ["ws://192.0.2.10:3778/v1/local"]
+}

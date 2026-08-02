@@ -7,6 +7,7 @@ import {
   isRelayEnvelope,
   isSecureMessage,
   PROTOCOL_VERSION,
+  type PairingBundle,
   type RelayEnvelope,
 } from "./index.js";
 
@@ -18,6 +19,13 @@ test("accepts the cross-language relay fixture shape", () => {
 
 test("accepts the shared secure-message fixture", () => {
   assert.equal(isSecureMessage(readFixture("secure-message.json")), true);
+});
+
+test("keeps the shared PairingBundle wire shape", () => {
+  const fixture = readFixture("pairing-bundle.json") as PairingBundle;
+  assert.equal(fixture.protocolVersion, PROTOCOL_VERSION);
+  assert.equal(fixture.expiresAt, "2030-01-02T03:04:05.000Z");
+  assert.deepEqual(fixture.lanEndpoints, ["ws://192.0.2.10:3778/v1/local"]);
 });
 
 test("decrypts the deterministic Dart/Rust crypto fixture", () => {
@@ -75,6 +83,19 @@ test("rejects plaintext and invalid nonce fields", () => {
       kind: "event",
       nonce: "not-a-nonce",
       ciphertext: "plaintext",
+    }),
+    false,
+  );
+  assert.equal(
+    isRelayEnvelope({
+      version: PROTOCOL_VERSION,
+      messageId: "msg-2",
+      sourceDeviceId: "desktop-1",
+      targetDeviceId: "mobile-1",
+      sequence: 1,
+      kind: "event",
+      nonce: Buffer.alloc(12).toString("base64"),
+      ciphertext: Buffer.from("opaque").toString("base64"),
     }),
     false,
   );

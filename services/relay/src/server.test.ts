@@ -83,7 +83,7 @@ test("routes only opaque envelopes between authenticated peers", async () => {
       targetDeviceId: fixture.mobile.device.deviceId,
       sequence: 1,
       kind: "event",
-      nonce: Buffer.alloc(12).toString("base64"),
+      nonce: nonceForSequence(1),
       ciphertext: Buffer.from("encrypted-only").toString("base64"),
     };
     const received = nextJson(mobileSocket);
@@ -343,9 +343,16 @@ function opaqueEnvelope(
     targetDeviceId: fixture.mobile.device.deviceId,
     sequence,
     kind: "event",
-    nonce: Buffer.alloc(12, sequence).toString("base64"),
+    nonce: nonceForSequence(sequence),
     ciphertext: Buffer.from(content).toString("base64"),
   };
+}
+
+function nonceForSequence(sequence: number, epoch = 1): string {
+  const nonce = Buffer.alloc(12);
+  nonce.writeUInt32BE(epoch, 0);
+  nonce.writeBigUInt64BE(BigInt(sequence), 4);
+  return nonce.toString("base64");
 }
 
 function createDevice(deviceId: string) {

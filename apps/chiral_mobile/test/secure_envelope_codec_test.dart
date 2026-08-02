@@ -64,7 +64,7 @@ void main() {
       message: request,
       kind: RelayKind.request,
       sequence: 7,
-      nonce: List<int>.generate(12, (int index) => index),
+      nonce: _nonceFor(1, 7),
     );
 
     expect(envelope.ciphertext, isNot(contains('hello')));
@@ -115,7 +115,7 @@ void main() {
       message: request,
       kind: RelayKind.request,
       sequence: 8,
-      nonce: List<int>.filled(12, 8),
+      nonce: _nonceFor(2, 8),
     );
     final List<int> ciphertext = base64Decode(envelope.ciphertext);
     ciphertext[0] ^= 0xff;
@@ -143,7 +143,7 @@ void main() {
       message: request,
       kind: RelayKind.request,
       sequence: 9,
-      nonce: List<int>.filled(12, 9),
+      nonce: _nonceFor(3, 9),
     );
     final SecureEnvelopeCodec wrongKey = SecureEnvelopeCodec(
       localDeviceId: 'desktop-test',
@@ -161,30 +161,65 @@ void main() {
   });
 
   test(
-    'rejects replayed and out-of-order sequences independently per peer',
+    'rejects replayed sequences independently per peer and connection epoch',
     () {
       final InboundSequenceGuard guard = InboundSequenceGuard();
       final RelayEnvelope sequenceTwo = _fixtureEnvelope(
         source: 'desktop-a',
         sequence: 2,
+        epoch: 1,
       );
       guard.accept(sequenceTwo);
       expect(() => guard.accept(sequenceTwo), throwsStateError);
       expect(
-        () => guard.accept(_fixtureEnvelope(source: 'desktop-a', sequence: 1)),
+        () => guard.accept(
+          _fixtureEnvelope(source: 'desktop-a', sequence: 1, epoch: 1),
+        ),
         throwsStateError,
       );
       expect(
-        () => guard.accept(_fixtureEnvelope(source: 'desktop-b', sequence: 1)),
+        () => guard.accept(
+          _fixtureEnvelope(source: 'desktop-a', sequence: 1, epoch: 2),
+        ),
+        returnsNormally,
+      );
+      expect(
+        () => guard.accept(
+          _fixtureEnvelope(source: 'desktop-b', sequence: 1, epoch: 1),
+        ),
         returnsNormally,
       );
     },
   );
+
+  test('rejects nonce and sequence mismatches', () async {
+    await expectLater(
+      mobile.encrypt(
+        message: request,
+        kind: RelayKind.request,
+        sequence: 10,
+        nonce: _nonceFor(4, 9),
+      ),
+      throwsFormatException,
+    );
+
+    final RelayEnvelope valid = await mobile.encrypt(
+      message: request,
+      kind: RelayKind.request,
+      sequence: 10,
+      nonce: _nonceFor(4, 10),
+    );
+    await expectLater(
+      desktop.decrypt(_copyEnvelope(valid, sequence: 11)),
+      throwsFormatException,
+    );
+  });
 }
 
 RelayEnvelope _fixtureEnvelope({
   required String source,
   required int sequence,
+  required int epoch,
 }) {
   return RelayEnvelope(
     messageId: '$source-$sequence',
@@ -192,21 +227,33 @@ RelayEnvelope _fixtureEnvelope({
     targetDeviceId: 'mobile-test',
     sequence: sequence,
     kind: RelayKind.event,
-    nonce: base64Encode(List<int>.filled(12, 0)),
+    nonce: base64Encode(_nonceFor(epoch, sequence)),
     ciphertext: base64Encode(utf8.encode('opaque-encrypted-content')),
   );
 }
+
+List<int> _nonceFor(int epoch, int sequence) => <int>[
+  0,
+  0,
+  0,
+  epoch,
+  ...List<int>.generate(
+    8,
+    (int index) => (sequence >> ((7 - index) * 8)) & 0xff,
+  ),
+];
 
 RelayEnvelope _copyEnvelope(
   RelayEnvelope source, {
   String? messageId,
   String? ciphertext,
+  int? sequence,
 }) {
   return RelayEnvelope(
     messageId: messageId ?? source.messageId,
     sourceDeviceId: source.sourceDeviceId,
     targetDeviceId: source.targetDeviceId,
-    sequence: source.sequence,
+    sequence: sequence ?? source.sequence,
     kind: source.kind,
     nonce: source.nonce,
     ciphertext: ciphertext ?? source.ciphertext,

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chiral.liyuanstudio.com/schema/v1/pairing-bundle.json",
+  "title": "Chiral PairingBundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocolVersion",
+    "relayUrl",
+    "pairingId",
+    "pairingToken",
+    "expiresAt",
+    "desktop",
+    "lanEndpoints"
+  ],
+  "properties": {
+    "protocolVersion": { "const": "1.0" },
+    "relayUrl": { "type": "string", "format": "uri" },
+    "pairingId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "pairingToken": { "type": "string", "minLength": 1 },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "desktop": { "$ref": "#/$defs/deviceDescriptor" },
+    "lanEndpoints": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri" },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "deviceDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deviceId",
+        "displayName",
+        "identityPublicKey",
+        "agreementPublicKey"
+      ],
+      "properties": {
+        "deviceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "identityPublicKey": { "type": "string", "minLength": 1 },
+        "agreementPublicKey": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
